@@ -4,8 +4,7 @@ src/debate_agent_lc.py
 Defines a DebateAgentLC that:
   - uses ConversationBufferMemory to track conversation,
   - uses ChatPromptTemplate with a single user 'input',
-  - merges 'stance_description' and 'agent_name' into the system context,
-  - calls .invoke() instead of .run() to avoid deprecation warnings.
+  - merges 'stance_description' and 'agent_name' into the system context
 """
 
 from langchain.memory import ConversationBufferMemory
@@ -17,10 +16,7 @@ from langchain.prompts.chat import (
 )
 from langchain.schema import AIMessage, HumanMessage
 from langchain.chains import LLMChain
-
-# This function returns a ChatOpenAI or other chat-based LLM depending on model_name
 from models import create_langchain_llm
-
 
 class DebateAgentLC:
     """

@@ -1,3 +1,9 @@
+'''
+src/debate_runner.py
+
+Defines a run_debate function that orchestrates a debate between two agents.
+'''
+
 from src.debate_agent_lc import DebateAgentLC
 
 def run_debate(topic: str, pro_model: str, con_model: str, rounds: int = 3):

@@ -4,9 +4,9 @@ src/debate_agent_lc_models.py
 A single place to define create_langchain_llm(...) for each model_name.
 """
 
+import os
 from dotenv import load_dotenv
 load_dotenv(override=True)
-
 from langchain.llms.base import BaseLLM
 
 try:
@@ -39,7 +39,6 @@ try:
 except ImportError:
     HAS_GENAI = False
 
-import os
 
 def create_langchain_llm(model_name: str, temperature: float = 0.0) -> BaseLLM:
     """
