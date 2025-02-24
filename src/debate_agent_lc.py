@@ -42,7 +42,6 @@ class DebateAgentLC:
         self.llm = create_langchain_llm(model_name, temperature=temperature)
 
         # 2. Conversation memory, expecting a single user input key named "input"
-        # This ensures we won't get "one input key expected" errors.
         self.memory = ConversationBufferMemory(
             return_messages=True,
             memory_key="chat_history",  # We'll reference this in the prompt as {chat_history}
