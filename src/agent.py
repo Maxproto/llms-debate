@@ -3,10 +3,10 @@ src/agent.py
 
 DebateAgentLC: A debate agent that uses LangChain's message history for conversation tracking.
 '''
-from typing import List, Optional, Dict, Any
+from typing import Dict, Any
 import uuid
 
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
@@ -24,7 +24,7 @@ class DebateAgentLC:
     def __init__(
         self,
         agent_name: str,          # e.g. "ProAgent" or "ConAgent"
-        model_name: str,          # e.g. "o3-mini", "gemini-2.0-flash", etc.
+        model_name: str,          # e.g. "gpt-4o", "gemini-2.0-flash", etc.
         stance_description: str,  # e.g. "You are PRO on the topic..."
         temperature: float = 0.7,
         verbose: bool = False     # Set to True for debug prints

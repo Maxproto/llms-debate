@@ -44,7 +44,7 @@ def main():
 
     # 5. Models
     if args.models is None:
-        model_list = ["gpt-4o", "o3-mini", "claude-3.5-haiku", "mistral-small-latest", "llama-3.2-3b", "gemini-2.0-flash"]
+        model_list = ["gpt-4o", "claude-3.5-haiku", "mistral-small-latest", "llama-3.2-3b", "gemini-2.0-flash"]
     else:
         model_list = args.models
     logger.info(f"Models: {model_list}")

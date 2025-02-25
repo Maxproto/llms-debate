@@ -11,7 +11,7 @@ load_dotenv(override=True)
 from langchain.llms.base import BaseLLM
 
 try:
-    from langchain_openai import ChatOpenAI  # for GPT-4o, o3-mini
+    from langchain_openai import ChatOpenAI  # for GPT-4o
     HAS_OPENAI = True
 except ImportError:
     HAS_OPENAI = False
@@ -50,24 +50,17 @@ def create_langchain_llm(
     Create a chat-based LLM or text-based LLM instance for the given model_name.
     Supports a 'max_tokens' param where possible.
 
-    :param model_name: e.g. 'gpt-4o', 'o3-mini', etc.
+    :param model_name: e.g. 'gpt-4o', 'gemini-2.0-flash', etc.
     :param temperature: how creative the model is
     :param max_tokens: maximum tokens per response if supported
     """
-    # GPT-4o / o3-mini
+    # GPT-4o
     if model_name == "gpt-4o":
         if not HAS_OPENAI:
             raise ValueError("OpenAI integration not installed.")
         return ChatOpenAI(
             model_name="gpt-4o",
             temperature=temperature,
-            max_tokens=max_tokens
-        )
-    elif model_name == "o3-mini":
-        if not HAS_OPENAI:
-            raise ValueError("OpenAI integration not installed.")
-        return ChatOpenAI(
-            model_name="o3-mini",
             max_tokens=max_tokens
         )
 
@@ -114,5 +107,5 @@ def create_langchain_llm(
         )
 
     else:
-        raise ValueError(f"Unsupported model_name={model_name}. Supported: gpt-4o, o3-mini, "
+        raise ValueError(f"Unsupported model_name={model_name}. Supported: gpt-4o, "
                          "claude-3.5-haiku, mistral-small-latest, llama-3.2-3b, gemini-2.0-flash")

@@ -7,8 +7,6 @@ Quick demo to test loading topics and generating pairings.
 import sys
 import os
 
-# Adjust Python path if necessary so we can import from src/
-# (Optional depending on your environment setup)
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from src.utils import load_debate_topics, generate_debate_pairings
 
@@ -21,7 +19,6 @@ def main():
     # 2. Define models
     models = [
         'gpt-4o',
-        'o3-mini',
         'claude-3.5-haiku',
         'mistral-small-latest',
         'llama-3.2-3b',
