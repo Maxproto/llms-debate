@@ -80,7 +80,8 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--rounds", type=int, default=3,
                         help="Number of rebuttal rounds. Default=3.")
     parser.add_argument("--models", nargs='+', default=None,
-                        help="List of model names (space-separated). Default=all supported models.")
+                        help="List of model names (space-separated). Default=all supported models: gpt-4o, o3-mini,"
+                         "claude-3.5-haiku, mistral-small-latest, llama-3.2-3b, gemini-2.0-flash.")
     parser.add_argument("--max_tokens", type=int, default=400,
                         help="Max tokens per model response. Default=400.")
     return parser

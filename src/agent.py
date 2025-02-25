@@ -1,112 +1,149 @@
-"""
+'''
 src/agent.py
 
-Defines a DebateAgentLC that:
-  - uses ConversationBufferMemory to track conversation,
-  - uses ChatPromptTemplate with a single user 'input',
-  - merges 'stance_description' and 'agent_name' into the system context
-"""
+DebateAgentLC: A debate agent that uses LangChain's message history for conversation tracking.
+'''
+from typing import List, Optional, Dict, Any
+import uuid
 
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-    MessagesPlaceholder
-)
-from langchain.schema import AIMessage, HumanMessage
-from langchain.chains import LLMChain
+from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import RunnableWithMessageHistory
+from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
+
 from src.models import create_langchain_llm
 
 class DebateAgentLC:
     """
-    A single debate agent that:
-      - has a stance (pro or con) described in a system message,
-      - keeps a conversation buffer memory with user input key='input',
-      - provides respond(input_text) to produce a new agent message.
+    A debate agent that:
+      - uses LangChain's message history for conversation tracking,
+      - compiles a chain via the | operator (creating a RunnableSequence),
+      - wraps the chain with RunnableWithMessageHistory for message persistence.
     """
-
     def __init__(
         self,
         agent_name: str,          # e.g. "ProAgent" or "ConAgent"
         model_name: str,          # e.g. "o3-mini", "gemini-2.0-flash", etc.
         stance_description: str,  # e.g. "You are PRO on the topic..."
-        temperature: float = 0.7
+        temperature: float = 0.7,
+        verbose: bool = False     # Set to True for debug prints
     ):
         self.agent_name = agent_name
         self.model_name = model_name
         self.stance_description = stance_description
         self.temperature = temperature
+        self.verbose = verbose
+        
+        # Create a unique ID for this agent instance
+        self.instance_id = str(uuid.uuid4())[:8]
+        self.session_id = f"{self.agent_name}_{self.instance_id}"
 
-        # 1. Create the LLM using the official integration in your create_langchain_llm
+        # Create the LLM using your helper function
         self.llm = create_langchain_llm(model_name, temperature=temperature)
 
-        # 2. Conversation memory, expecting a single user input key named "input"
-        self.memory = ConversationBufferMemory(
-            return_messages=True,
-            memory_key="chat_history",  # We'll reference this in the prompt as {chat_history}
-            input_key="input",          # The user query is under "input"
-            output_key="response"       # The LLM's response will be stored under "response"
-        )
+        # Create a message history store - this replaces ConversationBufferMemory
+        self.message_history = ChatMessageHistory()
+        
+        # Store message histories in a dict so they can be accessed by session_id
+        self.message_histories = {self.session_id: self.message_history}
 
-        # 3. We'll build a ChatPromptTemplate with system + memory + user
-        #    The system message holds the stance context & agent identity.
+        # Build the chat prompt template
         system_template = (
             "You are {agent_name}.\n"
             "{stance_description}\n"
             "Maintain a coherent multi-turn conversation and respond helpfully."
         )
         system_prompt = SystemMessagePromptTemplate.from_template(system_template)
-        # The conversation memory is inserted as a placeholder:
         memory_placeholder = MessagesPlaceholder(variable_name="chat_history")
-        # The user's new message is the 'input':
         human_prompt = HumanMessagePromptTemplate.from_template("{input}")
 
-        chat_prompt = ChatPromptTemplate.from_messages([
+        self.chat_prompt = ChatPromptTemplate.from_messages([
             system_prompt,
             memory_placeholder,
             human_prompt
         ])
 
-        # 4. Create an LLMChain from these pieces
-        self.chain = LLMChain(
-            llm=self.llm,
-            prompt=chat_prompt,
-            memory=self.memory,
-            output_key="response"
+        # Compose the chain using the pipe operator
+        base_chain = self.chat_prompt | self.llm
+        
+        # Define a message history getter function
+        def get_session_history(session_id: str) -> BaseChatMessageHistory:
+            if session_id not in self.message_histories:
+                self.message_histories[session_id] = ChatMessageHistory()
+            return self.message_histories[session_id]
+        
+        # Create the chain with message history
+        self.chain = RunnableWithMessageHistory(
+            base_chain,
+            get_session_history=get_session_history,
+            input_messages_key="input",
+            history_messages_key="chat_history",
+            output_messages_key="output"
         )
 
-    def add_opponent_message(self, text: str):
+    def _debug_print_prompt(self, variables: Dict[str, Any]):
         """
-        Add the opponent's statement as a 'HumanMessage' in this agent's memory.
-        This sets up the next turn so that when we call respond(...),
-        the agent sees 'input' = user text.
+        Print the formatted prompt for debugging purposes.
         """
-        self.memory.chat_memory.messages.append(HumanMessage(content=text))
-
-    def add_self_reply(self, text: str):
-        """
-        Add the agent's own prior reply as an 'AIMessage' in this agent's memory.
-        This ensures the memory has a complete record.
-        """
-        self.memory.chat_memory.messages.append(AIMessage(content=text))
+        if not self.verbose:
+            return
+            
+        print(f"\n{'='*80}\n[DEBUG] {self.agent_name} PROMPT:")
+        
+        # Format and print the system message
+        system_template = (
+            "You are {agent_name}.\n"
+            "{stance_description}\n"
+            "Maintain a coherent multi-turn conversation and respond helpfully."
+        )
+        formatted_system = system_template.format(
+            agent_name=variables["agent_name"],
+            stance_description=variables["stance_description"]
+        )
+        print(f"SYSTEM:\n{formatted_system}\n")
+        
+        # Print the conversation history
+        print("CONVERSATION HISTORY:")
+        for msg in self.message_history.messages:
+            prefix = "HUMAN" if isinstance(msg, HumanMessage) else "AI"
+            print(f"{prefix}: {msg.content}")
+        
+        # Print the current input
+        print(f"\nCURRENT INPUT: {variables['input']}")
+        print(f"{'='*80}\n")
 
     def respond(self, user_input: str = "") -> str:
         """
-        Generate the agent's next response. We pass user_input as "input" to the chain.
-        If user_input is empty, we rely on the previously appended 'HumanMessage' in memory.
-        If non-empty, it's as if the agent sees a new user query in the same turn.
-        :return: The agent's text response
+        Generate the agent's next response.
+        This method passes the agent's identity, stance, and the new user input.
         """
-        # .invoke() returns a dict with {"response": "..."} if output_key="response"
-        outputs = self.chain.invoke({"agent_name": self.agent_name,
-                                     "stance_description": self.stance_description,
-                                     "input": user_input})
-        # The memory will store this user input as well as the LLM's new response automatically
-        return outputs["response"].strip()
+        # Create input variables
+        variables = {
+            "agent_name": self.agent_name,
+            "stance_description": self.stance_description,
+            "input": user_input,
+        }
+        
+        # Debug print the full prompt
+        self._debug_print_prompt(variables)
+        
+        # Invoke the chain with session_id to track conversation history
+        outputs = self.chain.invoke(
+            variables,
+            config={"configurable": {"session_id": self.session_id}}
+        )
+        
+        # Extract and return the AI's response
+        response = outputs.content.strip() if hasattr(outputs, "content") else str(outputs)
+        
+        if self.verbose:
+            print(f"\n[DEBUG] {self.agent_name} RESPONSE: {response}\n")
+            
+        return response
 
     def get_full_memory(self):
         """
-        Return the entire conversation from this agent's perspective.
+        Return the full conversation history.
         """
-        return self.memory.chat_memory.messages
+        return self.message_history.messages
