@@ -14,8 +14,8 @@ import json
 # Make sure Python can find src/
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.debate_runner import run_debate
-from src.debate_logger import DebateLogger
+from runner import run_debate
+from logger import DebateLogger
 
 def main():
     # Example topic and model names
