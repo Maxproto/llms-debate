@@ -68,7 +68,6 @@ def create_langchain_llm(
             raise ValueError("OpenAI integration not installed.")
         return ChatOpenAI(
             model_name="o3-mini",
-            temperature=temperature,
             max_tokens=max_tokens
         )
 
