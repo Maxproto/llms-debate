@@ -1,5 +1,5 @@
 """
-src/debate_agent_lc.py
+src/agent.py
 
 Defines a DebateAgentLC that:
   - uses ConversationBufferMemory to track conversation,
@@ -16,7 +16,7 @@ from langchain.prompts.chat import (
 )
 from langchain.schema import AIMessage, HumanMessage
 from langchain.chains import LLMChain
-from models import create_langchain_llm
+from src.models import create_langchain_llm
 
 class DebateAgentLC:
     """
@@ -82,7 +82,6 @@ class DebateAgentLC:
         This sets up the next turn so that when we call respond(...),
         the agent sees 'input' = user text.
         """
-        # We directly append to chat_history for the memory. Alternatively, we can call chain's memory.save_context().
         self.memory.chat_memory.messages.append(HumanMessage(content=text))
 
     def add_self_reply(self, text: str):

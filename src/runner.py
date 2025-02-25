@@ -1,12 +1,20 @@
-'''
-src/debate_runner.py
+"""
+src/runner.py
 
-Defines a run_debate function that orchestrates a debate between two agents.
-'''
+Orchestrates a single debate between two models for a given topic.
+"""
 
-from src.debate_agent_lc import DebateAgentLC
+from src.agent import DebateAgentLC
 
 def run_debate(topic: str, pro_model: str, con_model: str, rounds: int = 3):
+    """
+    Conduct a multi-turn debate and return a transcript record.
+    :param topic: The debate topic
+    :param pro_model: model name for the Pro side
+    :param con_model: model name for the Con side
+    :param rounds: how many back-and-forth rebuttals
+    :return: a dict describing the entire debate transcript
+    """
     debate_record = {
         "topic": topic,
         "pro_model": pro_model,
@@ -14,6 +22,7 @@ def run_debate(topic: str, pro_model: str, con_model: str, rounds: int = 3):
         "turns": []
     }
 
+    # Create Agents
     pro_agent = DebateAgentLC("ProAgent", pro_model, f"You are PRO on the topic: '{topic}'...")
     con_agent = DebateAgentLC("ConAgent", con_model, f"You are CON on the topic: '{topic}'...")
 
@@ -25,7 +34,6 @@ def run_debate(topic: str, pro_model: str, con_model: str, rounds: int = 3):
         "content": pro_opening
     })
 
-    # Con sees Pro's statement as user input in next turn
     con_opening = con_agent.respond(f"ProAgent said: {pro_opening}\nPlease present your opening statement.")
     debate_record["turns"].append({
         "stage": "opening",
@@ -33,7 +41,7 @@ def run_debate(topic: str, pro_model: str, con_model: str, rounds: int = 3):
         "content": con_opening
     })
 
-    # 2. Rebuttals
+    # 2. Rebuttal rounds
     last_con_msg = con_opening
     for r in range(1, rounds + 1):
         pro_rebuttal = pro_agent.respond(f"ConAgent's last argument: {last_con_msg}\nYour rebuttal:")
@@ -42,6 +50,7 @@ def run_debate(topic: str, pro_model: str, con_model: str, rounds: int = 3):
             "agent": "ProAgent",
             "content": pro_rebuttal
         })
+
         con_rebuttal = con_agent.respond(f"ProAgent said: {pro_rebuttal}\nYour rebuttal:")
         debate_record["turns"].append({
             "stage": f"rebuttal_{r}",
@@ -57,6 +66,7 @@ def run_debate(topic: str, pro_model: str, con_model: str, rounds: int = 3):
         "agent": "ProAgent",
         "content": pro_closing
     })
+
     con_closing = con_agent.respond(f"ProAgent's closing: {pro_closing}\nNow your closing:")
     debate_record["turns"].append({
         "stage": "closing",
