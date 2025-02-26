@@ -1,7 +1,7 @@
 """
-experiments/batch_experiment.py
+experiments/debate_experiment.py
 
-Batch experiment script:
+Debate experiment script:
 - Parse CLI for topic indices, model list, rounds, max_tokens
 - Load topics, slice them, generate pairings
 - For each pairing, run debate, log partial results
@@ -10,13 +10,29 @@ Batch experiment script:
 
 import sys
 import os
+import argparse
 from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.utils import load_debate_topics, generate_debate_pairings, get_parser
+from src.utils import load_debate_topics, generate_debate_pairings
 from src.logger import DebateLogger
 from src.runner import run_debate
+
+def get_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Debate Batch Experiment CLI")
+    parser.add_argument("--start", type=int, default=None,
+                        help="Start topic index (inclusive). Default=0.")
+    parser.add_argument("--end", type=int, default=None,
+                        help="End topic index (inclusive). Default=last topic.")
+    parser.add_argument("--rounds", type=int, default=3,
+                        help="Number of rebuttal rounds. Default=3.")
+    parser.add_argument("--models", nargs='+', default=None,
+                        help="List of model names (space-separated). Default=all supported models: gpt-4o,"
+                         " claude-3.5-haiku, mistral-small-latest, llama-3.2-3b, gemini-2.0-flash.")
+    parser.add_argument("--max_tokens", type=int, default=400,
+                        help="Max tokens per model response. Default=400.")
+    return parser
 
 def main():
     # 1. Parse CLI
@@ -25,8 +41,9 @@ def main():
 
     # 2. Prepare a logger
     now_str = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    logger = DebateLogger(output_dir="logs", log_filename=f'batch_experiment_{now_str}.log')
+    logger = DebateLogger(log_dir="logs", record_dir="records", log_filename=f'batch_experiment_{now_str}.log')
     logger.info("=== Starting Debate Batch Experiment ===")
+    logger.info(f"Storing progress log in logs/batch_experiment_{now_str}.log")
 
     # 3. Load topics
     topic_file = os.path.join("data", "debate_topics.txt")
@@ -60,6 +77,7 @@ def main():
 
     # 7. Store partial results in "debates_inprogress.json"
     partial_file = f'debates_inprogress_{now_str}.json'
+    logger.info(f"Storing partial results in {partial_file}")
 
     # 8. For each pairing, run the debate
     debate_count = 0
@@ -81,13 +99,13 @@ def main():
         except Exception as e:
             logger.error(f"Debate failed: topic_idx={t_idx}, pro={pro}, con={con}, error={str(e)}")
 
-    logger.info(f"All debates completed. Partial results in debates_inprogress_{now_str}.json")
+    logger.info(f"All debates completed. Partial results in records/debates_inprogress_{now_str}.json")
 
     # 9. Final rename with model & range info
     short_models = "-".join([m.split("-")[0] for m in model_list])
     final_filename = f"debates_{short_models}_{start_idx}to{end_idx}_{now_str}.json"
-    inprog_path = os.path.join("logs", partial_file)
-    final_path = os.path.join("logs", final_filename)
+    inprog_path = os.path.join("records", partial_file)
+    final_path = os.path.join("records", final_filename)
     if os.path.exists(inprog_path):
         os.rename(inprog_path, final_path)
         logger.info(f"Renamed partial log to final: {final_path}")

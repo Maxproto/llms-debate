@@ -3,11 +3,9 @@ src/utils.py
 
 1) load_debate_topics(): Load topics from file.
 2) generate_debate_pairings(): Build all (pro, con) combos for each selected topic range.
-3) get_parser(): Build CLI parser for batch experiment.
 """
 
 import os
-import argparse
 from typing import List, Dict, Any
 
 def load_debate_topics(file_path: str) -> list:
@@ -25,7 +23,6 @@ def load_debate_topics(file_path: str) -> list:
             if topic:
                 topics.append(topic)
     return topics
-
 
 def generate_debate_pairings(models: List[str], topics: List[str], start_idx: int, end_idx: int) -> List[Dict[str, Any]]:
     """
@@ -66,22 +63,3 @@ def generate_debate_pairings(models: List[str], topics: List[str], start_idx: in
                 "con": B
             })
     return result
-
-
-def get_parser() -> argparse.ArgumentParser:
-    """
-    Build and return an ArgumentParser for the debate batch experiment.
-    """
-    parser = argparse.ArgumentParser(description="Debate Batch Experiment CLI")
-    parser.add_argument("--start", type=int, default=None,
-                        help="Start topic index (inclusive). Default=0.")
-    parser.add_argument("--end", type=int, default=None,
-                        help="End topic index (inclusive). Default=last topic.")
-    parser.add_argument("--rounds", type=int, default=3,
-                        help="Number of rebuttal rounds. Default=3.")
-    parser.add_argument("--models", nargs='+', default=None,
-                        help="List of model names (space-separated). Default=all supported models: gpt-4o,"
-                         "claude-3.5-haiku, mistral-small-latest, llama-3.2-3b, gemini-2.0-flash.")
-    parser.add_argument("--max_tokens", type=int, default=400,
-                        help="Max tokens per model response. Default=400.")
-    return parser

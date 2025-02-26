@@ -29,7 +29,7 @@ except ImportError:
     HAS_MISTRAL = False
 
 try:
-    from langchain_ollama import OllamaLLM  # for Llama local
+    from langchain_ollama import ChatOllama  # for Llama local
     HAS_OLLAMA = True
 except ImportError:
     HAS_OLLAMA = False
@@ -88,7 +88,7 @@ def create_langchain_llm(
     elif model_name == "llama-3.2-3b":
         if not HAS_OLLAMA:
             raise ValueError("Ollama integration not installed.")
-        return OllamaLLM(
+        return ChatOllama(
             model="llama3.2",
             temperature=temperature,
             base_url="http://localhost:11434",

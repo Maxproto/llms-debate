@@ -1,3 +1,6 @@
 .env
-src/__pycache__
 logs/
+records/
+results/
+src/metrics/__pycache__
+src/__pycache__

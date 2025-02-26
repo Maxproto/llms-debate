@@ -12,16 +12,17 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 class DebateLogger:
-    def __init__(self, output_dir: str = "logs", log_filename: str = None):
+    def __init__(self, log_dir: str = "logs", record_dir = "records", log_filename: str = None):
         """
         Initialize a logger. If log_filename is None, we name it 'debates.log' by default.
         Also track in-memory debate records for JSON dumping.
         """
-        self.output_dir = output_dir
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.log_dir = log_dir
+        self.record_dir = record_dir
+        os.makedirs(self.log_dir, exist_ok=True)
         if not log_filename:
             log_filename = "debates.log"
-        self.log_path = os.path.join(self.output_dir, log_filename)
+        self.log_path = os.path.join(self.log_dir, log_filename)
 
         # Setup python logging
         self.logger = logging.getLogger("DebateLogger")
@@ -83,7 +84,7 @@ class DebateLogger:
         """
         if not filename:
             filename = "debates_inprogress.json"
-        out_path = os.path.join(self.output_dir, filename)
+        out_path = os.path.join(self.record_dir, filename)
 
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(self.debates, f, indent=2, ensure_ascii=False)
@@ -98,7 +99,7 @@ class DebateLogger:
         if not filename:
             timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
             filename = f"debates_{timestamp}.json"
-        out_path = os.path.join(self.output_dir, filename)
+        out_path = os.path.join(self.record_dir, filename)
 
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(self.debates, f, indent=2, ensure_ascii=False)
