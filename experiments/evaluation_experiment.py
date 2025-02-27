@@ -23,8 +23,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from src.logger import GlobalLogger
 from src.metrics.ai_judgement import ai_judgement
-from metrics.consistency import compute_agent_consistency
-from metrics.coverage import compute_agent_coverage
+from src.metrics.consistency import compute_agent_consistency
+from src.metrics.coverage import compute_agent_coverage
 from src.metrics.coherence import compute_agent_coherence
 
 def get_parser() -> argparse.ArgumentParser:
