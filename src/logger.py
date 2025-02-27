@@ -11,55 +11,42 @@ import json
 from datetime import datetime
 from typing import Dict, Any, List
 
+class GlobalLogger:
+    _loggers = {}
+
+    @classmethod
+    def get_logger(cls, name: str = "global", level: int = logging.INFO):
+        if name in cls._loggers:
+            return cls._loggers[name]
+        logger = logging.getLogger(name)
+        logger.setLevel(level)
+        if not logger.handlers:
+            log_dir = "logs"
+            os.makedirs(log_dir, exist_ok=True)
+            log_file = os.path.join(log_dir, f"{name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.log")
+            file_handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
+            file_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+            logger.addHandler(file_handler)
+            console_handler = logging.StreamHandler()
+            console_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+            logger.addHandler(console_handler)
+        cls._loggers[name] = logger
+        logger.info(f"Initialized logger {name}, output to {log_file}.")
+        return logger
+
 class DebateLogger:
-    def __init__(self, log_dir: str = "logs", record_dir = "records", log_filename: str = None):
-        """
-        Initialize a logger. If log_filename is None, we name it 'debates.log' by default.
-        Also track in-memory debate records for JSON dumping.
-        """
-        self.log_dir = log_dir
+    def __init__(self, record_dir: str = "records"):
         self.record_dir = record_dir
-        os.makedirs(self.log_dir, exist_ok=True)
-        if not log_filename:
-            log_filename = "debates.log"
-        self.log_path = os.path.join(self.log_dir, log_filename)
-
-        # Setup python logging
-        self.logger = logging.getLogger("DebateLogger")
-        self.logger.setLevel(logging.INFO)
-        # Avoid duplicating handlers if re-init
-        if not self.logger.handlers:
-            # File handler
-            fh = logging.FileHandler(self.log_path, mode="w", encoding="utf-8")
-            fh.setLevel(logging.INFO)
-            formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
-            fh.setFormatter(formatter)
-            self.logger.addHandler(fh)
-
-            # (Optional) console handler
-            ch = logging.StreamHandler()
-            ch.setLevel(logging.INFO)
-            ch.setFormatter(formatter)
-            self.logger.addHandler(ch)
-
+        self.logger = GlobalLogger.get_logger("Debate")
         self.debates: List[Dict[str, Any]] = []
 
     def info(self, msg: str):
-        """
-        Shortcut to log an INFO-level message.
-        """
         self.logger.info(msg)
 
     def error(self, msg: str):
-        """
-        Shortcut to log an ERROR-level message.
-        """
         self.logger.error(msg)
 
     def debug(self, msg: str):
-        """
-        Shortcut to log a DEBUG-level message.
-        """
         self.logger.debug(msg)
 
     def log_debate(self, debate_data: Dict[str, Any], pro_model: str, con_model: str, topic_index: int):
@@ -80,29 +67,23 @@ class DebateLogger:
     def save_partial_json(self, filename: str = None):
         """
         Writes all stored debates to a JSON file, but does not clear them.
-        Good for partial/in-progress saving.
         """
         if not filename:
             filename = "debates_inprogress.json"
         out_path = os.path.join(self.record_dir, filename)
-
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(self.debates, f, indent=2, ensure_ascii=False)
-
         self.logger.info(f"Saved partial {len(self.debates)} debates to {out_path}")
 
     def finalize_json(self, filename: str = None):
         """
         Writes all stored debates to a JSON file and clears them.
-        For final output after all runs are done.
         """
         if not filename:
             timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
             filename = f"debates_{timestamp}.json"
         out_path = os.path.join(self.record_dir, filename)
-
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(self.debates, f, indent=2, ensure_ascii=False)
-
         self.logger.info(f"Finalized {len(self.debates)} debates to {out_path}")
         self.debates.clear()

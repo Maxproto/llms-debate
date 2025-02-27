@@ -41,9 +41,8 @@ def main():
 
     # 2. Prepare a logger
     now_str = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    logger = DebateLogger(log_dir="logs", record_dir="records", log_filename=f'batch_experiment_{now_str}.log')
+    logger = DebateLogger(record_dir="records")
     logger.info("=== Starting Debate Batch Experiment ===")
-    logger.info(f"Storing progress log in logs/batch_experiment_{now_str}.log")
 
     # 3. Load topics
     topic_file = os.path.join("data", "debate_topics.txt")

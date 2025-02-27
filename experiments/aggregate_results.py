@@ -16,25 +16,18 @@ import sys
 import os
 import csv
 import glob
-import logging
 import argparse
 from datetime import datetime
 
-def setup_logger():
-    logger = logging.getLogger("aggregate")
-    logger.setLevel(logging.INFO)
-    if not logger.handlers:
-        ch = logging.StreamHandler()
-        ch.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
-        logger.addHandler(ch)
-    return logger
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from src.logger import GlobalLogger
 
 def get_parser():
     parser = argparse.ArgumentParser(
         description="Aggregate debate metrics (one row per debate with pro and con) into model-level summary."
     )
     parser.add_argument("--input_csv_pattern", default="results/debate_metrics_*.csv",
-                        help="Glob pattern to find input CSVs from step 1.")
+                        help="Glob pattern to find input CSVs from evaluation_experiment.py.")
     parser.add_argument("--out_dir", default="results", help="Folder to store the final summary CSV.")
     return parser
 
@@ -47,8 +40,8 @@ def safe_float(val):
         return None
 
 def main():
-    logger = setup_logger()
     args = get_parser().parse_args()
+    logger = GlobalLogger.get_logger("Aggregate")
 
     all_files = glob.glob(args.input_csv_pattern)
     if not all_files:

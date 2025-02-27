@@ -9,8 +9,6 @@ CSV row per debate. The row contains:
   pro_model, pro_coverage, pro_coherence, pro_consistency,
   con_model, con_coverage, con_coherence, con_consistency,
   ai_judge_model, ai_judge_winner, ai_judgement
-
-If an AI judge is requested, the same judge info is recorded for the debate.
 """
 
 import sys
@@ -18,25 +16,16 @@ import os
 import json
 import csv
 import glob
-import logging
 import argparse
 from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+from src.logger import GlobalLogger
 from src.metrics.ai_judgement import ai_judgement
-from src.metrics.consistency import compute_agent_consistency
-from src.metrics.coverage import compute_agent_coverage
+from metrics.consistency import compute_agent_consistency
+from metrics.coverage import compute_agent_coverage
 from src.metrics.coherence import compute_agent_coherence
-
-def setup_logger():
-    logger = logging.getLogger("evaluation")
-    logger.setLevel(logging.INFO)
-    if not logger.handlers:
-        ch = logging.StreamHandler()
-        ch.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
-        logger.addHandler(ch)
-    return logger
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -65,8 +54,8 @@ def load_records(record_dir: str):
     return recs
 
 def main():
-    logger = setup_logger()
     args = get_parser().parse_args()
+    logger = GlobalLogger.get_logger("Evaluation")
     os.makedirs(args.result_dir, exist_ok=True)
 
     # Load debates
