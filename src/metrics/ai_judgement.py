@@ -15,11 +15,6 @@ def ai_judgement(
     judge_max_tokens: int = 400,
     topic: str = ""
 ) -> str:
-    """
-    Use a model from src/models.py for AI judgement.
-    We'll rename agents to 'Debater 1' and 'Debater 2', build a single text prompt,
-    then call the model's .predict() or similar method.
-    """
     logger = logging.getLogger("evaluation")
 
     # Build debate text & Map each agent name to Debater 1, Debater 2, etc.
