@@ -1,0 +1,9 @@
+argparse
+python-dotenv
+langchain-core
+langchain-openai
+langchain-anthropic
+langchain-mistralai
+langchain-ollama
+langchain-google-genai
+langchain-community
