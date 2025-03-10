@@ -51,7 +51,7 @@ MISTRAL_API_KEY=your_mistral_key
 GENAI_API_KEY=your_genai_key
 ```
 
-> **Note:** Only fill in the keys for the models you want to use.
+> **Note:** Only fill in the keys for the models you want to use. We also support the local models by Ollama!
 
 ---
 
