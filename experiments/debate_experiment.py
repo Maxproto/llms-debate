@@ -82,9 +82,7 @@ def main():
         # create a list of all required pairs
         all_missing_debates = []
         for t_idx_str, pair_list in topics_to_complete.items():
-            # t_idx is an int
             t_idx = int(t_idx_str)
-            # skip if pair_list is empty
             if not pair_list:
                 continue
             for pair_entry in pair_list:
@@ -94,7 +92,7 @@ def main():
         total_debates = len(all_missing_debates)
         logger.info(f"Total missing debates to run: {total_debates}")
 
-        # store partial results in a special "debates_incomplete_inprogress.json"
+        # store partial results in "debates_incomplete_inprogress.json"
         partial_file = f"debates_incomplete_inprogress_{now_str}.json"
         logger.info(f"Storing partial results in {partial_file}")
 
@@ -123,7 +121,6 @@ def main():
 
         logger.info(f"All missing debates completed. Partial results in records/{partial_file}")
 
-        # rename the final file:
         final_filename = f"debates_incomplete_{now_str}.json"
         inprog_path = os.path.join("records", partial_file)
         final_path = os.path.join("records", final_filename)
